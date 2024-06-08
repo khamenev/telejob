@@ -1,0 +1,8 @@
+/.env.prod
+/.env.test
+/lastMessageIDs.json
+/.tdlib/
+/errors.txt
+/.idea/sqldialects.xml
+/.idea/telejob.iml
+/.idea/vcs.xml
