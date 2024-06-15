@@ -30,5 +30,6 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            docker pull khamenev/telejob:latest
+            cd /opt/telejob
+            docker-compose pull
             docker-compose up -d
