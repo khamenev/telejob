@@ -14,7 +14,8 @@ RUN go mod download
 COPY . .
 
 # Build the Go app
-RUN go build -o main .
+WORKDIR /app/cmd
+RUN go build -o /main .
 
 # Use a minimal image to run the application
 FROM alpine:latest
@@ -27,7 +28,7 @@ RUN apk add --no-cache bash curl tzdata postgresql-client busybox-suid ca-certif
     update-ca-certificates
 
 # Copy the Pre-built binary file from the previous stage
-COPY --from=builder /app/main .
+COPY --from=builder /main .
 COPY --from=builder /app/migrations ./migrations
 
 # Expose port
