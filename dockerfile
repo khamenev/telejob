@@ -1,23 +1,27 @@
 # Use an official Golang image as a base
 FROM golang:1.20 as builder
 
-# Установите необходимые пакеты для сборки TDLib
+# Set the Current Working Directory inside the container
+WORKDIR /app
+
+# Install necessary dependencies for TDLib and OpenSSH
 RUN apt-get update && apt-get install -y \
     cmake \
     g++ \
     zlib1g-dev \
     libssl-dev \
-    git
+    git \
+    gperf \
+    openssh-server
 
-# Клонируйте и соберите TDLib
+# Clone and build TDLib
 WORKDIR /tdlib
 RUN git clone https://github.com/tdlib/td.git .
 RUN mkdir build && cd build && \
     cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=/usr/local .. && \
     cmake --build . --target install
 
-
-# Set the Current Working Directory inside the container
+# Set the Current Working Directory back to the application directory
 WORKDIR /app
 
 # Copy go mod and sum files
@@ -38,19 +42,17 @@ FROM alpine:latest
 # Set the Current Working Directory inside the container
 WORKDIR /root/
 
-# Copy the Pre-built binary file from the previous stage
-COPY --from=builder /app/main .
-COPY --from=builder /app/migrations ./migrations
-COPY --from=builder /usr/local/lib/libtd* /usr/local/lib/
-
-# Install cron and necessary packages
+# Install necessary packages
 RUN apk add --no-cache bash curl tzdata postgresql-client busybox-suid ca-certificates && \
     update-ca-certificates
 
- RUN apk add --no-cache libstdc++ libgcc libssl1.1 ca-certificates && \
-     update-ca-certificates
+# Copy the Pre-built binary file from the previous stage
+COPY --from=builder /app/main .
+COPY --from=builder /app/migrations ./migrations
+COPY --from=builder /usr/local/lib/libtdjson.so /usr/lib
 
-RUN echo '/usr/local/lib' >> /etc/ld.so.conf.d/local.conf && ldconfig
+# Configure SSH
+RUN mkdir /var/run/sshd && echo 'root:password' | chpasswd && sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && sed -i 's/UsePAM yes/UsePAM no/' /etc/ssh/sshd_config
 
 # Copy entrypoint script
 COPY entrypoint.sh /root/entrypoint.sh
