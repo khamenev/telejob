@@ -1,5 +1,21 @@
 # Use an official Golang image as a base
-FROM golang:1.18 as builder
+FROM golang:1.20 as builder
+
+# Установите необходимые пакеты для сборки TDLib
+RUN apt-get update && apt-get install -y \
+    cmake \
+    g++ \
+    zlib1g-dev \
+    libssl-dev \
+    git
+
+# Клонируйте и соберите TDLib
+WORKDIR /tdlib
+RUN git clone https://github.com/tdlib/td.git .
+RUN mkdir build && cd build && \
+    cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=/usr/local .. && \
+    cmake --build . --target install
+
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
@@ -25,10 +41,16 @@ WORKDIR /root/
 # Copy the Pre-built binary file from the previous stage
 COPY --from=builder /app/main .
 COPY --from=builder /app/migrations ./migrations
+COPY --from=builder /usr/local/lib/libtd* /usr/local/lib/
 
 # Install cron and necessary packages
 RUN apk add --no-cache bash curl tzdata postgresql-client busybox-suid ca-certificates && \
     update-ca-certificates
+
+ RUN apk add --no-cache libstdc++ libgcc libssl1.1 ca-certificates && \
+     update-ca-certificates
+
+RUN echo '/usr/local/lib' >> /etc/ld.so.conf.d/local.conf && ldconfig
 
 # Copy entrypoint script
 COPY entrypoint.sh /root/entrypoint.sh
