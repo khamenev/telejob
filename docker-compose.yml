@@ -8,6 +8,10 @@ services:
       - ./migrations:/root/migrations
     env_file:
       - .env.${ENV:-prod}
+    environment:
+      TD_API_ID: ${TELEGRAM_API_ID}
+      TD_API_HASH: ${TELEGRAM_API_HASH}
+      DATABASE_URL: ${DATABASE_URL}
     depends_on:
       - db
     logging:
@@ -15,6 +19,10 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+    ports:
+      - "80:80"
+    networks:
+      - telejob-net
 
   db:
     image: postgres:13
@@ -27,6 +35,12 @@ services:
       - "5433:5432"
     volumes:
       - db-data:/var/lib/postgresql/data
+    networks:
+      - telejob-net
 
 volumes:
   db-data:
+
+networks:
+  telejob-net:
+    driver: bridge
