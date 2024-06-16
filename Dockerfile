@@ -5,8 +5,7 @@ FROM golang:1.22-alpine
 WORKDIR /root/telejob
 
 # Install cron and necessary packages
-RUN apk add --no-cache telegram-tdlib bash curl tzdata libgcc libssl1.1 postgresql-client ca-certificates && \
-    update-ca-certificates
+RUN apk add --no-cache telegram-tdlib bash curl tzdata openssl-dev postgresql-dev
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
