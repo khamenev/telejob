@@ -1,5 +1,5 @@
 # Use an official Golang image as a base
-FROM golang:1.22-alpine3.2 as builder
+FROM golang:1.22-alpine
 
 # Set the Current Working Directory inside the container
 WORKDIR /root/telejob
