@@ -5,7 +5,18 @@ FROM golang:1.22-alpine
 WORKDIR /root/telejob
 
 # Install cron and necessary packages
-RUN apk add --no-cache telegram-tdlib bash curl tzdata openssl-dev postgresql-dev
+RUN apk update && \
+    apk add --no-cache bash curl tzdata openssl-dev postgresql-dev alpine-sdk linux-headers git zlib-dev openssl-dev gperf php cmake
+
+RUN git clone --depth 1 --branch v1.8.0 https://github.com/tdlib/td.git \
+    && cd td \
+    && rm -rf build \
+    && mkdir build \
+    && cd build \
+    && cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX:PATH=/usr/local .. \
+    && cmake --build . --target install -- -j10 \
+    && ls -la /usr/local/lib | grep json
+
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
