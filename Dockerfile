@@ -28,9 +28,11 @@ RUN go mod download
 COPY . .
 
 # Build the Go app
+WORKDIR /root/telejob/cmd
 RUN go build -o main .
 
 # Copy entrypoint script
+WORKDIR /root/telejob/
 COPY entrypoint.sh /root/entrypoint.sh
 
 # Make the entrypoint script executable
